@@ -26,8 +26,10 @@
 
 ### Scrapyd安装
 
-```
+```shell
 pip install scrapyd
+# 为了方便在web端查看抓取情况，还需要安装logparser
+pip install logparser
 ```
 
 ### Scrapyd配置
@@ -53,6 +55,8 @@ scrapyd
 ```
 
 若能访问当前主机`6800`端口则启动成功(可通过配置conf文件中的`http_port`设置其他端口号)
+
+
 
 ## ScrapydWeb安装与配置
 
@@ -186,3 +190,20 @@ LOG_CRITICAL_TRIGGER_FORCESTOP = False
 LOG_IGNORE_TRIGGER_FORCESTOP = False
 ```
 以上示例代表：当日志中出现3条或以上的 critical 级别的 log 时，*ScrapydWeb* **将自动停止当前任务**，如果当前时间在邮件工作时间内，则同时发送通知邮件。
+
+## 注意事项
+
+### 不能使用`__file__`
+
+打包后使用`__file__`会存在[问题](https://github.com/scrapy/scrapyd-client/issues/46)，可以替换为[pkgutil.get_data](http://docs.python.org/library/pkgutil.html#pkgutil.get_data)
+
+```python
+open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'urls/url.lst'), 'r', encoding='utf8')
+
+# 可替换为
+pkgutil.get_data("pachong", 'urls/url.lst').decode("utf-8")
+```
+
+### 不能使用静态文件(临时方案)
+
+打包时默认只打包源文件，txt等文件将无法部署到爬虫服务器上。
