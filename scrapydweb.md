@@ -1,4 +1,4 @@
-# ScrapydWeb项目搭建及使用
+# ScrapydWeb使用
 
 ## 总体架构
 
@@ -22,98 +22,8 @@
 
   <u>**web主机同时也可以是抓取主机**</u>
 
-## Scrapyd安装和配置
-
-### Scrapyd安装
-
-```shell
-pip install scrapyd
-# 为了方便在web端查看抓取情况，还需要安装logparser
-pip install logparser
-```
-
-### Scrapyd配置
-
-在当前用户home目录下创建`.scrapyd.conf`
-
-```
-cd ~
-vi .scrapyd.conf
-```
-
-加入以下配置，使其他主机能访问scrapyd，详细配置见[文档](https://scrapyd.readthedocs.io/en/stable/config.html#config-example)
-
-```
-[scrapyd]
-bind_address = 0.0.0.0
-```
-
-### Scrapyd启动
-
-```
-scrapyd
-```
-
-若能访问当前主机`6800`端口则启动成功(可通过配置conf文件中的`http_port`设置其他端口号)
-
-
-
-## ScrapydWeb安装与配置
-
-### 安装
-
-```shell
-pip install scrapydweb
-```
-
-### 配置
-
-#### 生成配置文件
-
-```
-scrapydweb
-```
-
-第一次使用命令，将自动在当前目录下生成默认配置文件`scrapydweb_settings_v10.py`
-
-#### 修改配置文件
-
-需要配置以下内容
-
-| 配置项              | 内容                                               |
-| ------------------- | -------------------------------------------------- |
-| SCRAPYD_SERVERS     | 运行scrapyd服务的主机及端口                        |
-| SCRAPYDWEB_PORT     | 网站的端口号，默认为5000                           |
-| ENABLE_AUTH         | 是否需要密码进入网站，默认False                    |
-| USERNAME            | 用户名                                             |
-| PASSWORD            | 密码                                               |
-| SCRAPY_PROJECTS_DIR | scrapy项目目录，将项目放到该目录下才能实现一键部署 |
-
-***`SCRAPY_PROJECTS_DIR`若不存在需要手动建立***
-
-ScrapydWeb默认使用sqlite存储任务信息到本地，可以通过设置环境`DATABASE_URL`存储到远程数据库。
-
-```
-export DATABASE_URL=''
-# e.g.
-# 'mysql://username:password@127.0.0.1:3306'	使用mysql需pip install pymysql
-# 'postgres://username:password@127.0.0.1:5432'	使用postgres需pip install psycopg2
-# 'sqlite:///C:/Users/username'
-# 'sqlite:////home/username'
-```
-
-### 启用
-
-```
-scrapydweb
-```
-
-若`SCRAPYD_SERVERS`中配置的scrapyd主机信息正确，将能访问部署ScrapydWeb主机的5000端口或者配置的端口号。
-
-**无法通过web界面修改配置，故每次修改配置文件后需重启ScarpydWeb生效**
-
 ## 访问 web UI
-通过浏览器访问并登录 http://127.0.0.1:5000
+通过浏览器访问并登录 http://192.168.4.125:5000
 * Servers 页面自动输出所有 Scrapyd server 的运行状态。
 * 通过分组和过滤可以自由选择若干台 Scrapyd server，然后在上方 Tabs 标签页中选择 Scrapyd 提供的任一 [HTTP JSON API](https://scrapyd.readthedocs.io/en/latest/api.html)，实现**一次操作，批量执行**。
 
@@ -124,8 +34,10 @@ scrapydweb
 
 ![jobs](https://raw.githubusercontent.com/my8100/files/master/scrapydweb/screenshots/jobs.png)
 
-
 ## 部署项目
+
+代码合并至master后将触发jenkins更新服务器上的代码。必须将更新后的代码部署到爬虫服务器才能使新的爬虫代码生效。
+
 * 通过配置 `SCRAPY_PROJECTS_DIR` 指定 Scrapy 项目开发目录，*ScrapydWeb* 将自动列出该路径下的所有项目，默认选定最新编辑的项目，选择项目后即可**自动打包**和部署指定项目。
 * 如果 *ScrapydWeb* 运行在远程服务器上，除了通过当前开发主机上传常规的 egg 文件，也可以将整个项目文件夹添加到 zip/tar/tar.gz 压缩文件后直接上传即可，无需手动打包为 egg 文件。
 * **支持一键部署项目到 Scrapyd server 集群。**
@@ -135,11 +47,24 @@ scrapydweb
 
 ## 运行爬虫
 * 通过下拉框依次选择 project，version 和 spider。
+
 * 支持传入 Scrapy settings 和 spider arguments。
+
+  ```
+  # 传入参数arg1
+  -d arg1=val1
+  
+  # 传入设置DOWNLOAD_DELAY
+  -d setting=DOWNLOAD_DELAY=2
+  ```
+
 * 支持创建基于 [APScheduler](https://github.com/agronholm/apscheduler) 的定时爬虫任务。(如需同时启动大量爬虫任务，则需调整 Scrapyd 配置文件的 [max-proc](https://scrapyd.readthedocs.io/en/stable/config.html#max-proc) 参数)
+
 * **支持在 Scrapyd server 集群上一键启动分布式爬虫。**
 
 ![run](https://raw.githubusercontent.com/my8100/files/master/scrapydweb/screenshots/run.gif)
+
+
 
 
 ## 日志分析和可视化
